@@ -1,7 +1,9 @@
 # Dataset: CC BY-NC-SA 4.0, must never be committed or redistributed
-/data/*
-!/data/*.dvc
-!/data/.gitignore
+# Do not use a `/data/*` + negation pattern: DVC then treats the directory as ignored and
+# silently stops seeing its .dvc pointer files.
+/data/mvtec_ad/
+/data/*.tar*
+/data/*.zip
 
 # Python
 __pycache__/
@@ -16,7 +18,11 @@ __pycache__/
 /mlruns/
 /mlflow-data/
 /outputs/
-/models/
+*.onnx
+*.onnx.data
+*.ckpt
+*.pt
+*.pth
 /results/*.tmp
 lightning_logs/
 

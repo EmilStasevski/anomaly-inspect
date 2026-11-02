@@ -1,6 +1,7 @@
 # Dataset: CC BY-NC-SA 4.0, must never be committed or redistributed
-/data/
+/data/*
 !/data/*.dvc
+!/data/.gitignore
 
 # Python
 __pycache__/

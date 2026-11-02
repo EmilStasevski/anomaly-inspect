@@ -19,7 +19,9 @@ def main() -> int:
     capability = torch.cuda.get_device_capability()
     print(f"device: {torch.cuda.get_device_name(0)} | capability: {capability}")
     if capability != EXPECTED_CAPABILITY:
-        print(f"WARNING: expected capability {EXPECTED_CAPABILITY}, this result is machine-specific")
+        print(
+            f"WARNING: expected capability {EXPECTED_CAPABILITY}, this result is machine-specific"
+        )
 
     # Solve a linear system so that the check exercises real kernels, not only an allocation.
     torch.manual_seed(0)

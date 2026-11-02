@@ -1,0 +1,24 @@
+# All hooks are local: nothing is fetched from a remote hook repository.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --force-exclude --fix
+        language: system
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+      - id: forbid-dataset
+        name: dataset files must not be committed (CC BY-NC-SA 4.0)
+        entry: Dataset files must not be committed. Only .dvc pointer files are allowed.
+        language: fail
+        files: ^data/(?!.*\.dvc$|\.gitignore$)
+      - id: forbid-artifacts
+        name: run outputs and exported models must not be committed
+        entry: Run outputs and model binaries belong in MLflow or DVC, not in git.
+        language: fail
+        files: ^(mlruns|mlflow-data|outputs|\.dvc-remote)/|\.(onnx|ckpt|pt|pth|safetensors)$

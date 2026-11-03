@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from anomaly_inspect.data import CATEGORIES
-from anomaly_inspect.report import latency_table, replace_block, summary_table
+from anomaly_inspect.report import highlights, latency_table, replace_block, summary_table
 
 
 def test_replace_block_keeps_surrounding_text_and_is_repeatable() -> None:
@@ -45,3 +45,41 @@ def test_latency_table_contains_every_run() -> None:
     lines = latency_table(bench).splitlines()
     assert len(lines) == 5
     assert "| a | HTTP | CPU, 4 threads | 1.0 | 2.0 | 3.0 | 8.0 |" in lines
+
+
+def test_german_tables_use_a_decimal_comma_and_german_labels() -> None:
+    keys = (
+        "image_auroc",
+        "pixel_auroc",
+        "aupro",
+        "f1_max",
+        "f1_calibrated",
+        "recall_calibrated",
+        "false_reject_rate_calibrated",
+    )
+    metrics = {c: dict.fromkeys(keys, 0.5) for c in CATEGORIES}
+    row = summary_table(metrics, metrics, "de").splitlines()[2]
+    assert row == "| Image-AUROC | 0,500 | 0,500 | 0,500 | 0,500 |"
+
+
+def test_highlights_are_computed_from_the_results() -> None:
+    keys = {
+        "image_auroc": 0.9,
+        "f1_calibrated": 0.8,
+        "recall_calibrated": 0.75,
+        "false_reject_rate_calibrated": 0.05,
+    }
+    metrics = {c: dict(keys) for c in CATEGORIES}
+    bench = {
+        "http": [{"category": "metal_nut", "threads": 4, "p50_ms": 123.4}],
+        "gpu_reference": [{"category": "metal_nut", "p50_ms": 9.6}],
+    }
+    export = {"categories": {"a": {"max_score_error": 2e-5}, "b": {"max_score_error": 7e-5}}}
+    english = highlights(metrics, metrics, bench, export, "en")
+    assert "0.900 mean image AUROC" in english
+    assert "75.0% of defects caught** at a 5.0% false reject rate" in english
+    assert "123 ms median" in english
+    assert "7.0e-05" in english
+    german = highlights(metrics, metrics, bench, export, "de")
+    assert "0,900 mittlerer Image-AUROC" in german
+    assert "75,0 % der Defekte" in german

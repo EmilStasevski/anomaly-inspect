@@ -11,11 +11,14 @@ from typing import Any
 
 import mlflow
 
+from anomaly_inspect.charts import auroc_chart, calibrated_f1_chart, how_it_works, latency_chart
 from anomaly_inspect.data import CATEGORIES, FOCUS_CATEGORIES
 from anomaly_inspect.report import (
     category_table,
     environment_line,
     export_table,
+    focus_table,
+    highlights,
     latency_table,
     replace_block,
     summary_table,
@@ -24,7 +27,7 @@ from anomaly_inspect.tracking import configure_tracking
 
 FIGURES = Path("docs/figures")
 RESULTS = Path("docs/results.md")
-README = Path("README.md")
+READMES = {"en": Path("README.md"), "de": Path("README.de.md")}
 QUALITY_METRICS = [
     ("Image AUROC", "image_auroc"),
     ("Pixel AUROC", "pixel_auroc"),
@@ -155,15 +158,23 @@ defect types.
 """
     )
 
-    readme = README.read_text()
-    readme = replace_block(readme, "summary", summary)
-    readme = replace_block(
-        readme, "focus", category_table(base, core, FOCUS_CATEGORIES, QUALITY_METRICS)
-    )
-    readme = replace_block(readme, "latency", f"{environment}\n\n{latency}")
-    readme = replace_block(readme, "parity", parity)
-    README.write_text(readme)
-    print(f"Wrote {RESULTS} and updated {README}")
+    for language, path in READMES.items():
+        auroc_chart(base, core, FIGURES / f"chart_auroc_{language}.png", language)
+        calibrated_f1_chart(base, core, FIGURES / f"chart_f1_{language}.png", language)
+        latency_chart(bench, FIGURES / f"chart_latency_{language}.png", language)
+        how_it_works(FIGURES / f"how_it_works_{language}.png", language)
+
+        readme = path.read_text()
+        for block, content in {
+            "highlights": highlights(base, core, bench, export, language),
+            "summary": summary_table(base, core, language),
+            "focus": focus_table(base, core, language),
+            "latency": (f"{environment_line(bench, language)}\n\n{latency_table(bench, language)}"),
+            "parity": export_table(export, language),
+        }.items():
+            readme = replace_block(readme, block, content)
+        path.write_text(readme)
+    print(f"Wrote {RESULTS} and updated the READMEs")
 
 
 if __name__ == "__main__":

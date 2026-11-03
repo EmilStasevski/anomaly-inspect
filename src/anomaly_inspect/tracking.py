@@ -17,7 +17,13 @@ import torch
 
 DEFAULT_TRACKING_URI = "http://127.0.0.1:5000"
 # Pipeline outputs. Regenerating them does not mean that the code has changed.
-GENERATED_PATHSPECS = (":!results", ":!docs/results.md", ":!docs/figures", ":!README.md")
+GENERATED_PATHSPECS = (
+    ":!results",
+    ":!docs/results.md",
+    ":!docs/figures",
+    ":!README.md",
+    ":!README.de.md",
+)
 
 
 def seed_everything(seed: int) -> None:

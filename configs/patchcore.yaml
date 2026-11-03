@@ -1,0 +1,17 @@
+family: patchcore
+seed: 42
+data:
+  root: data/mvtec_ad
+  calibration_fraction: 0.1
+  batch_size: 32
+  num_workers: 8
+preprocess:
+  resize: 256
+  crop: 224
+model:
+  backbone: wide_resnet50_2
+  layers: [layer2, layer3]
+  coreset_ratio: 0.1
+  num_neighbors: 9
+threshold:
+  sigmas: 3.0

@@ -69,14 +69,14 @@ class Preprocess:
     mean: tuple[float, float, float] = (0.485, 0.456, 0.406)
     std: tuple[float, float, float] = (0.229, 0.224, 0.225)
 
-    def _crop_box(self) -> tuple[int, int, int, int]:
+    def crop_box(self) -> tuple[int, int, int, int]:
         start = (self.resize - self.crop) // 2
         return (start, start, start + self.crop, start + self.crop)
 
     def image(self, image: Image.Image) -> np.ndarray:
         """Return a float32 CHW array. Grayscale categories are expanded to three channels."""
         rgb = image.convert("RGB").resize((self.resize, self.resize), Image.Resampling.BILINEAR)
-        array = np.asarray(rgb.crop(self._crop_box()), dtype=np.float32) / 255.0
+        array = np.asarray(rgb.crop(self.crop_box()), dtype=np.float32) / 255.0
         mean = np.asarray(self.mean, dtype=np.float32)
         std = np.asarray(self.std, dtype=np.float32)
         return ((array - mean) / std).transpose(2, 0, 1)
@@ -84,7 +84,7 @@ class Preprocess:
     def mask(self, mask: Image.Image) -> np.ndarray:
         """Return a uint8 HW array of 0/1, using nearest neighbour so that labels stay binary."""
         resized = mask.convert("L").resize((self.resize, self.resize), Image.Resampling.NEAREST)
-        return (np.asarray(resized.crop(self._crop_box())) > 0).astype(np.uint8)
+        return (np.asarray(resized.crop(self.crop_box())) > 0).astype(np.uint8)
 
 
 def list_samples(root: Path, category: str, split: str) -> list[Sample]:

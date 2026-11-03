@@ -23,6 +23,8 @@ def seed_everything(seed: int) -> None:
     np.random.seed(seed)  # noqa: NPY002 - seeds the global RNG used by third-party code
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def git_commit() -> str:
@@ -68,6 +70,24 @@ def environment_info() -> dict[str, str]:
     return info
 
 
+def flatten_params(config: Mapping[str, Any], prefix: str = "") -> dict[str, Any]:
+    """Flatten nested config sections to dotted MLflow parameter names."""
+    flat: dict[str, Any] = {}
+    for key, value in config.items():
+        name = f"{prefix}{key}"
+        if isinstance(value, Mapping):
+            flat.update(flatten_params(value, f"{name}."))
+        else:
+            flat[name] = value
+    return flat
+
+
+def configure_tracking(tracking_uri: str | None = None) -> None:
+    mlflow.set_tracking_uri(
+        tracking_uri or os.environ.get("MLFLOW_TRACKING_URI", DEFAULT_TRACKING_URI)
+    )
+
+
 @contextmanager
 def tracked_run(
     experiment: str,
@@ -76,9 +96,7 @@ def tracked_run(
     tracking_uri: str | None = None,
 ) -> Iterator[mlflow.ActiveRun]:
     """Start a run in `experiment` with params, git commit and environment already logged."""
-    mlflow.set_tracking_uri(
-        tracking_uri or os.environ.get("MLFLOW_TRACKING_URI", DEFAULT_TRACKING_URI)
-    )
+    configure_tracking(tracking_uri)
     mlflow.set_experiment(experiment)
     with mlflow.start_run(run_name=run_name) as run:
         mlflow.log_params(dict(params))

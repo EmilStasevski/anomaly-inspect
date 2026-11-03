@@ -48,6 +48,12 @@ def f1_at_threshold(labels: np.ndarray, scores: np.ndarray, threshold: float) ->
     return 2 * true_positive / denominator if denominator else 0.0
 
 
+def decision_rates(labels: np.ndarray, scores: np.ndarray, threshold: float) -> tuple[float, float]:
+    """Return (defect recall, false reject rate) of the decision `score >= threshold`."""
+    predicted = scores >= threshold
+    return float(np.mean(predicted[labels == 1])), float(np.mean(predicted[labels == 0]))
+
+
 def calibrate_threshold(good_scores: np.ndarray, sigmas: float = 3.0) -> float:
     """Threshold from defect-free scores only: mean + k standard deviations."""
     return float(np.mean(good_scores) + sigmas * np.std(good_scores))

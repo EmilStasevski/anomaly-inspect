@@ -1,4 +1,19 @@
 services:
+  inference:
+    build: serving
+    image: anomaly-inspect/inference:local
+    environment:
+      INTRA_THREADS: "4"
+    volumes:
+      - ./models/onnx:/models:ro
+    ports:
+      - "127.0.0.1:${INFERENCE_PORT:-8090}:8080"
+    read_only: true
+    # The image also runs as a non-root user. no-new-privileges is not set because snap-packaged
+    # Docker then refuses to exec the entrypoint under its AppArmor profile.
+    cap_drop: [ALL]
+    restart: unless-stopped
+
   mlflow:
     build: docker/mlflow
     image: anomaly-inspect/mlflow:local

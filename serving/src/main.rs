@@ -1,7 +1,10 @@
 use std::collections::BTreeMap;
 use std::env;
+use std::io::{Read, Write};
+use std::net::TcpStream;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Duration;
 
 use anomaly_serving::model::{MODEL_FILE, Model, create_environment, runtime_info};
 use anomaly_serving::server::{AppState, Metrics, router};
@@ -47,8 +50,33 @@ fn load_models(
     Ok(models)
 }
 
+/// `anomaly-serving healthcheck`: the runtime image has no shell or curl for Docker to call.
+fn healthcheck(address: &str) -> Result<()> {
+    let port = address
+        .rsplit(':')
+        .next()
+        .context("BIND_ADDRESS has no port")?;
+    let mut stream = TcpStream::connect(("127.0.0.1", port.parse::<u16>()?))?;
+    stream.set_read_timeout(Some(Duration::from_secs(4)))?;
+    stream.write_all(b"GET /health HTTP/1.0\r\nHost: localhost\r\n\r\n")?;
+    let mut response = String::new();
+    stream.read_to_string(&mut response)?;
+    if !response.starts_with("HTTP/1.0 200") && !response.starts_with("HTTP/1.1 200") {
+        bail!(
+            "unhealthy: {}",
+            response.lines().next().unwrap_or("no response")
+        );
+    }
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
+    let address = env_or("BIND_ADDRESS", "127.0.0.1:8080");
+    if env::args().nth(1).as_deref() == Some("healthcheck") {
+        return healthcheck(&address);
+    }
+
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
         .init();
@@ -58,7 +86,6 @@ async fn main() -> Result<()> {
     let threads: usize = env_or("INTRA_THREADS", "4")
         .parse()
         .context("INTRA_THREADS must be an integer")?;
-    let address = env_or("BIND_ADDRESS", "127.0.0.1:8080");
 
     tracing::info!(runtime = runtime_info(), "starting");
     let models = load_models(&root, only.as_deref(), threads)?;

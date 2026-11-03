@@ -105,7 +105,7 @@ pub fn resize_rgb(image: &RgbImage, width: u32, height: u32) -> RgbImage {
             .chunks_exact(in_width * 3)
             .zip(out.chunks_exact_mut(out_width * 3))
         {
-            for (kernel, pixel) in table.iter().zip(row_out.chunks_exact_mut(3)) {
+            for (kernel, pixel) in table.iter().zip(row_out.as_chunks_mut::<3>().0.iter_mut()) {
                 let mut sums = [rounding_offset(); 3];
                 for (offset, &weight) in kernel.weights.iter().enumerate() {
                     let source = (kernel.start + offset) * 3;

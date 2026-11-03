@@ -16,6 +16,8 @@ import numpy as np
 import torch
 
 DEFAULT_TRACKING_URI = "http://127.0.0.1:5000"
+# Pipeline outputs. Regenerating them does not mean that the code has changed.
+GENERATED_PATHSPECS = (":!results", ":!docs/results.md", ":!docs/figures", ":!README.md")
 
 
 def seed_everything(seed: int) -> None:
@@ -34,7 +36,9 @@ def git_commit() -> str:
             ["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL
         ).strip()
         status = subprocess.check_output(
-            ["git", "status", "--porcelain"], text=True, stderr=subprocess.DEVNULL
+            ["git", "status", "--porcelain", "--", ".", *GENERATED_PATHSPECS],
+            text=True,
+            stderr=subprocess.DEVNULL,
         )
     except (OSError, subprocess.CalledProcessError):
         return "unknown"

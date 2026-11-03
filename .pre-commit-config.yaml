@@ -21,4 +21,4 @@ repos:
         name: run outputs and exported models must not be committed
         entry: Run outputs and model binaries belong in MLflow or DVC, not in git.
         language: fail
-        files: ^(mlruns|mlflow-data|outputs|\.dvc-remote)/|\.(onnx|ckpt|pt|pth|safetensors)$
+        files: ^(mlruns|mlflow-data|outputs|\.dvc-remote)/|^models/(?!.*\.dvc$|\.gitignore$)|\.(onnx|ckpt|pt|pth|safetensors)$

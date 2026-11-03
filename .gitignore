@@ -20,6 +20,7 @@ __pycache__/
 /outputs/
 # Model outputs. Versioned through DVC, not git.
 /models/**/meta.json
+/models/**/model.json
 *.onnx
 *.onnx.data
 *.ckpt

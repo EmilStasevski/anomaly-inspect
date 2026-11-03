@@ -25,7 +25,10 @@ eval: ## Evaluate both families on the test split, tracked in MLflow
 	uv run python scripts/evaluate.py --config configs/baseline.yaml
 	uv run python scripts/evaluate.py --config configs/patchcore.yaml
 
-bench serve export: ## Not implemented yet (later milestones)
+export: ## Export the focus categories to ONNX and check parity with PyTorch
+	uv run python scripts/export_onnx.py
+
+bench serve: ## Not implemented yet (later milestones)
 	@echo "'$@' is not implemented yet" >&2; exit 1
 
 test: ## Run the tests

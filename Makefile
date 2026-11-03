@@ -25,7 +25,7 @@ eval: ## Evaluate both families on the test split, tracked in MLflow
 	uv run python scripts/evaluate.py --config configs/baseline.yaml
 	uv run python scripts/evaluate.py --config configs/patchcore.yaml
 
-export bench serve: ## Not implemented yet (later milestones)
+bench serve export: ## Not implemented yet (later milestones)
 	@echo "'$@' is not implemented yet" >&2; exit 1
 
 test: ## Run the tests

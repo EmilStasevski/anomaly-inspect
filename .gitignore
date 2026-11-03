@@ -18,6 +18,8 @@ __pycache__/
 /mlruns/
 /mlflow-data/
 /outputs/
+# Model outputs. Versioned through DVC, not git.
+/models/**/meta.json
 *.onnx
 *.onnx.data
 *.ckpt

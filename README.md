@@ -6,7 +6,7 @@ This is an independent portfolio project built on a public benchmark. It is not 
 
 ![PatchCore heatmaps on metal_nut](docs/figures/patchcore_metal_nut.png)
 
-*Top: test images. Bottom: anomaly score in red, true defect outlined in cyan. Examples are picked by a fixed rule that ignores scores, so misses stay visible. Images: MVTec AD, adapted, CC BY-NC-SA 4.0.*
+*Top: test images. Bottom: anomaly score in red, true defect outlined in cyan. Examples are picked by a fixed rule that ignores scores, so misses stay visible: the scratch on the right is a real miss, scoring just under the threshold. Images: MVTec AD, adapted, CC BY-NC-SA 4.0.*
 
 ## The problem and why it matters
 
@@ -49,15 +49,32 @@ flowchart LR
 All tables between `generated` markers are written by `make report` from MLflow and benchmark files. Per-category details, provenance and all heatmaps are in [docs/results.md](docs/results.md).
 
 <!-- generated:summary:start -->
+| Mean | Baseline (focus 6) | PatchCore (focus 6) | Baseline (all 15) | PatchCore (all 15) |
+| --- | ---: | ---: | ---: | ---: |
+| Image AUROC | 0.921 | 0.985 | 0.903 | 0.987 |
+| Pixel AUROC | 0.964 | 0.981 | 0.959 | 0.976 |
+| AUPRO (FPR ≤ 0.3) | 0.899 | 0.933 | 0.871 | 0.909 |
+| F1, best threshold (uses test labels) | 0.929 | 0.982 | 0.923 | 0.983 |
+| F1, calibrated threshold | 0.644 | 0.932 | 0.651 | 0.948 |
+| Defect recall, calibrated | 0.573 | 0.898 | 0.567 | 0.925 |
+| False reject rate, calibrated | 0.026 | 0.074 | 0.057 | 0.071 |
 <!-- generated:summary:end -->
 
 "Focus 6" means metal_nut, screw, pill, transistor, bottle and carpet, chosen as the closest to metal and pump-like parts.
 
-**How to read this:** AUROC measures ranking quality and doesn't require choosing a threshold. A real line needs a yes/no decision, so the calibrated rows are the practical ones. Their threshold comes only from held-out good images, never from test labels. The gap between the two F1 rows shows how much a model depends on a threshold it couldn't choose in production.
+**How to read this:** AUROC measures ranking quality and doesn't require choosing a threshold. A real line needs a yes/no decision, so the calibrated rows are the practical ones. Their threshold comes only from held-out good images, never from test labels. The gap between the two F1 rows shows how much a model depends on a threshold it couldn't choose in production. PatchCore isn't better on every row: it rejects more good parts than the baseline in the focus categories, while catching far more defects.
 
 Focus categories:
 
 <!-- generated:focus:start -->
+| Category | Image AUROC baseline | Image AUROC PatchCore | Pixel AUROC baseline | Pixel AUROC PatchCore | AUPRO baseline | AUPRO PatchCore |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| metal_nut | 0.967 | 0.997 | 0.939 | 0.982 | 0.829 | 0.920 |
+| screw | 0.749 | 0.976 | 0.971 | 0.988 | 0.891 | 0.938 |
+| pill | 0.889 | 0.948 | 0.942 | 0.976 | 0.909 | 0.933 |
+| transistor | 0.934 | 1.000 | 0.971 | 0.969 | 0.906 | 0.944 |
+| bottle | 1.000 | 1.000 | 0.977 | 0.981 | 0.912 | 0.927 |
+| carpet | 0.988 | 0.989 | 0.985 | 0.988 | 0.948 | 0.937 |
 <!-- generated:focus:end -->
 
 ### Why these models
@@ -70,6 +87,24 @@ Both use the same loader, preprocessing, anomaly map post-processing and metric 
 ## Latency
 
 <!-- generated:latency:start -->
+Intel(R) Core(TM) i5-14400F, 16 logical CPUs, governor `powersave`, ONNX Runtime 1.31.0, batch size 1, 10 warm-up runs, 200 measured runs, oha 1.16.0 at concurrency 1. Peak server memory with one model loaded: 763 to 910 MB. Commit `7e11374f0743`.
+
+| Category | Level | Device | p50 ms | p95 ms | p99 ms | Images/s |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| metal_nut | In process | CPU, 1 thread | 445.1 | 459.5 | 465.0 | 2.2 |
+| metal_nut | In process | CPU, 4 threads | 120.7 | 130.7 | 131.5 | 8.2 |
+| metal_nut | In process | CPU, 8 threads | 85.3 | 86.3 | 87.9 | 11.7 |
+| metal_nut | HTTP | CPU, 1 thread | 452.7 | 464.7 | 470.4 | 2.2 |
+| metal_nut | HTTP | CPU, 4 threads | 129.3 | 137.4 | 138.0 | 7.7 |
+| metal_nut | HTTP | CPU, 8 threads | 91.9 | 92.5 | 95.5 | 10.9 |
+| screw | In process | CPU, 1 thread | 583.6 | 595.5 | 609.3 | 1.7 |
+| screw | In process | CPU, 4 threads | 162.5 | 170.7 | 171.3 | 6.2 |
+| screw | In process | CPU, 8 threads | 112.1 | 113.0 | 117.1 | 8.9 |
+| screw | HTTP | CPU, 1 thread | 594.8 | 608.3 | 627.0 | 1.7 |
+| screw | HTTP | CPU, 4 threads | 171.9 | 184.0 | 189.6 | 5.8 |
+| screw | HTTP | CPU, 8 threads | 124.7 | 128.4 | 135.4 | 8.0 |
+| metal_nut | In process (PyTorch) | GPU | 11.3 | 11.6 | 20.0 | 86.3 |
+| screw | In process (PyTorch) | GPU | 14.1 | 22.6 | 22.9 | 65.0 |
 <!-- generated:latency:end -->
 
 ONNX Runtime threads were pinned with `taskset`: one hardware thread per performance core up to 4 threads, and 6 performance plus 2 efficiency cores at 8 threads, so 8-thread results reflect this hybrid CPU. Other services on the machine were running, and frequency scaling was on. HTTP latency includes PNG decoding, preprocessing and JSON encoding. CPU latency grows with memory bank size, which is why screw is slower than metal_nut. Treat this as one machine's measurement, not a guarantee.
@@ -79,6 +114,14 @@ ONNX Runtime threads were pinned with `taskset`: one hardware thread per perform
 PatchCore's nearest-neighbour search is part of the exported graph, written as matrix multiplication over the memory bank, so one file holds the whole model. A custom wrapper replaces anomalib's export path, because batching and chunking in the original forward pass do not trace to a single-image graph. Parity is enforced by `tests/test_export.py` and by the export script itself:
 
 <!-- generated:parity:start -->
+| Category | Opset | MB | Memory bank | Images | Max score error | Max map error |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| metal_nut | 18 | 195 | 15523 | 20 | 6.5e-05 | 2.3e-04 |
+| screw | 18 | 238 | 22579 | 20 | 6.9e-05 | 1.5e-04 |
+| pill | 18 | 215 | 18816 | 20 | 7.2e-05 | 2.7e-04 |
+| transistor | 18 | 192 | 15052 | 20 | 7.2e-05 | 1.5e-04 |
+| bottle | 18 | 190 | 14739 | 20 | 5.0e-05 | 2.1e-04 |
+| carpet | 18 | 221 | 19756 | 20 | 5.3e-05 | 1.0e-04 |
 <!-- generated:parity:end -->
 
 The Rust preprocessing ports Pillow's fixed-point resize, because the `image` crate's resize rounds differently. `tests/test_serving.py` checks that the resulting tensors are **bit-identical** to Python's on images from all 15 categories. This is verified for PNG. JPEG decoders can differ between libraries, so JPEG uploads are not covered by that guarantee.

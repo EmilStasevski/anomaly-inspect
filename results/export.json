@@ -1,0 +1,55 @@
+{
+  "git_commit": "7e11374f074321361a33810686070eb0a80e9f21",
+  "score_tolerance": 0.001,
+  "map_tolerance": 0.01,
+  "categories": {
+    "metal_nut": {
+      "opset": 18,
+      "size_mb": 194.968505,
+      "memory_bank": 15523,
+      "n_images": 20,
+      "max_score_error": 6.4849853515625e-05,
+      "max_map_error": 0.000225067138671875
+    },
+    "screw": {
+      "opset": 18,
+      "size_mb": 238.320587,
+      "memory_bank": 22579,
+      "n_images": 20,
+      "max_score_error": 6.866455078125e-05,
+      "max_map_error": 0.000148773193359375
+    },
+    "pill": {
+      "opset": 18,
+      "size_mb": 215.200812,
+      "memory_bank": 18816,
+      "n_images": 20,
+      "max_score_error": 7.2479248046875e-05,
+      "max_map_error": 0.000274658203125
+    },
+    "transistor": {
+      "opset": 18,
+      "size_mb": 192.074778,
+      "memory_bank": 15052,
+      "n_images": 20,
+      "max_score_error": 7.2479248046875e-05,
+      "max_map_error": 0.0001468658447265625
+    },
+    "bottle": {
+      "opset": 18,
+      "size_mb": 190.151706,
+      "memory_bank": 14739,
+      "n_images": 20,
+      "max_score_error": 4.9591064453125e-05,
+      "max_map_error": 0.0002117156982421875
+    },
+    "carpet": {
+      "opset": 18,
+      "size_mb": 220.976172,
+      "memory_bank": 19756,
+      "n_images": 20,
+      "max_score_error": 5.340576171875e-05,
+      "max_map_error": 0.0001049041748046875
+    }
+  }
+}

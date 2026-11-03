@@ -25,6 +25,7 @@ from anomaly_inspect.export import (
 from anomaly_inspect.models import PatchcoreDetector, build_detector
 from anomaly_inspect.pipeline import META_FILE, MODELS_DIR, load_config
 from anomaly_inspect.pipeline import MODEL_FILE as FITTED_FILE
+from anomaly_inspect.tracking import git_commit
 
 SCORE_TOLERANCE = 1e-3
 MAP_TOLERANCE = 1e-2
@@ -74,10 +75,12 @@ def main() -> int:
     parser.add_argument("--categories", nargs="+", default=list(FOCUS_CATEGORIES))
     parser.add_argument("--output-dir", type=Path, default=MODELS_DIR / "onnx")
     parser.add_argument("--n-images", type=int, default=20)
+    parser.add_argument("--results", type=Path, default=Path("results/export.json"))
     args = parser.parse_args()
 
     config = load_config(args.config)
     failed = False
+    reports = {}
     for category in args.categories:
         report = export_category(config, category, args.output_dir, args.n_images)
         ok = (
@@ -85,6 +88,7 @@ def main() -> int:
             and report["max_map_error"] <= MAP_TOLERANCE
         )
         failed |= not ok
+        reports[category] = report
         print(
             f"{category:<12}opset {report['opset']}  {report['size_mb']:7.1f} MB  "
             f"bank {report['memory_bank']:>6}  n={report['n_images']}  "
@@ -92,6 +96,19 @@ def main() -> int:
             f"max|map err| {report['max_map_error']:.2e}  {'ok' if ok else 'FAIL'}",
             flush=True,
         )
+    args.results.parent.mkdir(parents=True, exist_ok=True)
+    args.results.write_text(
+        json.dumps(
+            {
+                "git_commit": git_commit(),
+                "score_tolerance": SCORE_TOLERANCE,
+                "map_tolerance": MAP_TOLERANCE,
+                "categories": reports,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
     return 1 if failed else 0
 
 
